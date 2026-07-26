@@ -1,4 +1,4 @@
-const map = L.map('map');
+const map = L.map('map', { preferCanvas: true });
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
   attribution:
@@ -18,47 +18,33 @@ function escapeHtml(value) {
   }[ch]));
 }
 
-function renderShapes(geojson) {
+function renderRoutes(geojson) {
   return L.geoJSON(geojson, {
-    style: (feature) => ({
-      color: '#' + (feature.properties.route_color || '3388FF'),
-      weight: 3,
-      opacity: 0.8,
+    style: () => ({
+      color: '#2b6cb0',
+      weight: 2,
+      opacity: 0.65,
     }),
     onEachFeature: (feature, layer) => {
       const p = feature.properties;
-      const title = p.route_short_name || p.route_long_name || p.shape_id;
+      const title = p.route_name || p.route_variant_name || p.route || 'Unknown route';
       let html = `<strong>${escapeHtml(title)}</strong>`;
-      if (p.route_long_name) html += `<br>${escapeHtml(p.route_long_name)}`;
+      if (p.route) html += `<br>Route ${escapeHtml(p.route)}`;
+      if (p.directionid) html += ` &middot; ${escapeHtml(p.directionid)}`;
+      if (p.operator_name) html += `<br>${escapeHtml(p.operator_name)}`;
       layer.bindPopup(html);
     },
   }).addTo(map);
 }
 
-function renderStops(geojson) {
-  return L.geoJSON(geojson, {
-    pointToLayer: (feature, latlng) =>
-      L.circleMarker(latlng, {
-        radius: 5,
-        fillColor: '#e6550d',
-        color: '#fff',
-        weight: 1,
-        fillOpacity: 0.9,
-      }),
-    onEachFeature: (feature, layer) => {
-      const p = feature.properties;
-      let html = `<strong>${escapeHtml(p.stop_name || 'Unnamed stop')}</strong>`;
-      if (p.stop_code) html += `<br>Code: ${escapeHtml(p.stop_code)}`;
-      html += `<br>ID: ${escapeHtml(p.stop_id)}`;
-      layer.bindPopup(html);
-    },
-  }).addTo(map);
-}
-
-function fitMapToData(...geojsonLayers) {
-  const combined = L.geoJSON(geojsonLayers);
-  const bounds = combined.getBounds();
-  if (bounds.isValid()) {
+function fitMapToLayers(...layers) {
+  let bounds = null;
+  for (const layer of layers) {
+    const b = layer.getBounds();
+    if (!b.isValid()) continue;
+    bounds = bounds ? bounds.extend(b) : b;
+  }
+  if (bounds && bounds.isValid()) {
     map.fitBounds(bounds, { padding: [20, 20] });
   } else {
     map.setView([0, 0], 2);
@@ -73,27 +59,22 @@ function showError(message) {
 }
 
 async function loadData() {
-  let stopsResp, shapesResp;
+  let resp;
   try {
-    [stopsResp, shapesResp] = await Promise.all([
-      fetch('data/stops.geojson'),
-      fetch('data/shapes.geojson'),
-    ]);
+    resp = await fetch('data/bus_routes.geojson');
   } catch (err) {
-    showError('Failed to fetch data/*.geojson. Are you serving this over HTTP (not file://)?');
+    showError('Failed to fetch data/bus_routes.geojson. Are you serving this over HTTP (not file://)?');
     return;
   }
 
-  if (!stopsResp.ok || !shapesResp.ok) {
-    showError('Failed to load data/*.geojson — run scripts/convert_gtfs_to_geojson.py first.');
+  if (!resp.ok) {
+    showError('Failed to load data/bus_routes.geojson — run scripts/simplify_geojson.py first.');
     return;
   }
 
-  const [stopsData, shapesData] = await Promise.all([stopsResp.json(), shapesResp.json()]);
-
-  renderShapes(shapesData);
-  renderStops(stopsData);
-  fitMapToData(stopsData, shapesData);
+  const geojson = await resp.json();
+  const routesLayer = renderRoutes(geojson);
+  fitMapToLayers(routesLayer);
 }
 
 loadData();
