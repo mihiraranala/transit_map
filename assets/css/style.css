@@ -26,3 +26,47 @@ html, body, #map {
   font-family: sans-serif;
   font-size: 0.9rem;
 }
+
+.legend {
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  font-family: sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #222;
+}
+
+.legend-title {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.legend-swatch-line {
+  height: 3px;
+  width: 16px;
+}
+
+.legend-swatch-outline {
+  background: transparent;
+  border: 2px solid;
+}
+
+.legend-swatch-fill {
+  border: 1px solid #999;
+}
