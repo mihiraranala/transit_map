@@ -7,8 +7,11 @@ so the data is displayed as-is with no reprojection.
 
 ## Requirements
 
-- Python 3 (standard library only — no `pip install` needed)
+- Python 3
 - Any modern web browser
+- `scripts/simplify_geojson.py` and `scripts/convert_gtfs_to_geojson.py` use
+  only the standard library. `scripts/convert_states_shapefile.py` (state
+  boundaries) additionally needs `geopandas`, `shapely`, and `pyproj`.
 
 ## Setup — using your own GeoJSON
 
@@ -50,6 +53,30 @@ density: 433 MB / 17,589 features / ~10.5M points).
 
 4. Open [http://localhost:8000](http://localhost:8000) in your browser.
 
+## State/territory boundaries (background layer)
+
+`data/states.geojson` — Australian state/territory outlines rendered as a
+light gray context layer beneath the bus routes — is generated from the ABS
+`STE_2021_AUST_SHP_GDA2020` shapefile in `data/STE_2021_AUST_SHP_GDA2020/`:
+
+```
+python3 scripts/convert_states_shapefile.py
+```
+
+This reprojects the shapefile from its native GDA2020 (EPSG:7844) to WGS84
+(EPSG:4326) to match the rest of the site, and simplifies the coastlines
+(`SIMPLIFY_TOLERANCE_DEG` in the script, default ~200m) — the raw shapefile
+has ~1.8M vertices across 10 states/territories at full cartographic detail
+(down to tiny offshore islands), far more than a background layer needs. On
+this dataset that's 29 MB → 3.6 MB. Note GDA2020 and WGS84 differ by roughly
+1.5–2m in real-world position due to different reference frames/epochs — well
+below anything visible at web-map scale, so no additional datum shift beyond
+the standard EPSG:7844→EPSG:4326 transform is applied.
+
+This layer is optional — if `data/states.geojson` isn't present, the site
+still loads and just shows the bus routes without it (a console warning is
+logged, nothing breaks).
+
 ## Setup — using GTFS instead
 
 If you have a GTFS static feed (stops.txt/routes.txt/trips.txt/shapes.txt)
@@ -63,12 +90,13 @@ from one source or the other.
 ## Project layout
 
 ```
-geojson/    raw input GeoJSON (yours to replace)
-gtfs/       raw GTFS input files, alternate pipeline (sample fixture included)
-data/       generated/simplified GeoJSON actually served to the browser
-scripts/    simplify_geojson.py, convert_gtfs_to_geojson.py
-assets/     frontend CSS/JS
-index.html  entry point
+geojson/                      raw input GeoJSON (yours to replace)
+gtfs/                         raw GTFS input files, alternate pipeline (sample fixture included)
+data/STE_2021_AUST_SHP_GDA2020/  raw ABS states/territories shapefile
+data/                          generated/simplified GeoJSON actually served to the browser
+scripts/                       simplify_geojson.py, convert_gtfs_to_geojson.py, convert_states_shapefile.py
+assets/                        frontend CSS/JS
+index.html                     entry point
 ```
 
 ## Attribution

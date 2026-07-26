@@ -18,10 +18,68 @@ function escapeHtml(value) {
   }[ch]));
 }
 
+const NSW_COLOR = '#0b2545';
+const OTHER_STATE_COLOR = '#ffffff';
+const ROUTE_COLOR = '#2b6cb0';
+
+function stateStyle(feature) {
+  if (feature.properties.state_name === 'New South Wales') {
+    return {
+      color: NSW_COLOR,
+      weight: 2.5,
+      fillColor: NSW_COLOR,
+      fillOpacity: 0.08,
+      opacity: 1,
+    };
+  }
+  return {
+    color: OTHER_STATE_COLOR,
+    weight: 1,
+    fillColor: OTHER_STATE_COLOR,
+    fillOpacity: 0.4,
+    opacity: 0.4,
+  };
+}
+
+function renderStates(geojson) {
+  return L.geoJSON(geojson, {
+    style: stateStyle,
+    onEachFeature: (feature, layer) => {
+      const p = feature.properties;
+      layer.bindPopup(`<strong>${escapeHtml(p.state_name)}</strong>`);
+    },
+  }).addTo(map);
+}
+
+function addLegend() {
+  const legend = L.control({ position: 'topleft' });
+  legend.onAdd = () => {
+    const div = L.DomUtil.create('div', 'legend');
+    L.DomEvent.disableClickPropagation(div);
+    div.innerHTML = `
+      <div class="legend-title">Legend</div>
+      <div class="legend-item">
+        <span class="legend-swatch legend-swatch-line" style="background:${ROUTE_COLOR}"></span>
+        Bus routes
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch legend-swatch-outline" style="border-color:${NSW_COLOR}"></span>
+        New South Wales
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch legend-swatch-fill" style="background:${OTHER_STATE_COLOR}"></span>
+        Other states/territories
+      </div>
+    `;
+    return div;
+  };
+  legend.addTo(map);
+}
+
 function renderRoutes(geojson) {
   return L.geoJSON(geojson, {
     style: () => ({
-      color: '#2b6cb0',
+      color: ROUTE_COLOR,
       weight: 2,
       opacity: 0.65,
     }),
@@ -59,22 +117,35 @@ function showError(message) {
 }
 
 async function loadData() {
-  let resp;
+  let statesResp, routesResp;
   try {
-    resp = await fetch('data/bus_routes.geojson');
+    [statesResp, routesResp] = await Promise.all([
+      fetch('data/states.geojson'),
+      fetch('data/bus_routes.geojson'),
+    ]);
   } catch (err) {
-    showError('Failed to fetch data/bus_routes.geojson. Are you serving this over HTTP (not file://)?');
+    showError('Failed to fetch data/*.geojson. Are you serving this over HTTP (not file://)?');
     return;
   }
 
-  if (!resp.ok) {
+  if (!routesResp.ok) {
     showError('Failed to load data/bus_routes.geojson — run scripts/simplify_geojson.py first.');
     return;
   }
 
-  const geojson = await resp.json();
-  const routesLayer = renderRoutes(geojson);
+  // States is a background context layer — render it before routes so routes
+  // sit on top, but don't fail the whole page if it's missing.
+  if (statesResp.ok) {
+    const statesData = await statesResp.json();
+    renderStates(statesData);
+  } else {
+    console.warn('data/states.geojson not found — run scripts/convert_states_shapefile.py to add it.');
+  }
+
+  const routesData = await routesResp.json();
+  const routesLayer = renderRoutes(routesData);
   fitMapToLayers(routesLayer);
 }
 
+addLegend();
 loadData();
