@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.006,
+          40.7128
+        ]
+      },
+      "properties": {
+        "stop_id": "S1",
+        "stop_name": "Main St & 1st Ave",
+        "location_type": "0",
+        "stop_code": "1001"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0,
+          40.7328
+        ]
+      },
+      "properties": {
+        "stop_id": "S2",
+        "stop_name": "Main St & 5th Ave",
+        "location_type": "0",
+        "stop_code": "1002"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.994,
+          40.7528
+        ]
+      },
+      "properties": {
+        "stop_id": "S3",
+        "stop_name": "Main St & 9th Ave",
+        "location_type": "0",
+        "stop_code": "1003"
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+stop_id,stop_code,stop_name,stop_lat,stop_lon,location_type
+S1,1001,Main St & 1st Ave,40.7128,-74.0060,0
+S2,1002,Main St & 5th Ave,40.7328,-74.0000,0
+S3,1003,Main St & 9th Ave,40.7528,-73.9940,0
