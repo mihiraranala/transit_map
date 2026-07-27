@@ -44,10 +44,6 @@ function stateStyle(feature) {
 function renderStates(geojson) {
   return L.geoJSON(geojson, {
     style: stateStyle,
-    onEachFeature: (feature, layer) => {
-      const p = feature.properties;
-      layer.bindPopup(`<strong>${escapeHtml(p.state_name)}</strong>`);
-    },
   }).addTo(map);
 }
 
@@ -61,14 +57,6 @@ function addLegend() {
       <div class="legend-item">
         <span class="legend-swatch legend-swatch-line" style="background:${ROUTE_COLOR}"></span>
         Bus routes
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch legend-swatch-outline" style="border-color:${NSW_COLOR}"></span>
-        New South Wales
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch legend-swatch-fill" style="background:${OTHER_STATE_COLOR}"></span>
-        Other states/territories
       </div>
     `;
     return div;

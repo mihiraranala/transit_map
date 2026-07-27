@@ -1,9 +1,17 @@
 # Transit Mapping
 
 A static website that visualizes bus route data on a [Leaflet](https://leafletjs.com/)
-map, using a [CartoDB Positron](https://carto.com/basemaps) basemap. Coordinates
-are WGS84 (EPSG:4326) lat/lng, which is also Leaflet's native coordinate system,
-so the data is displayed as-is with no reprojection.
+map, using a [CartoDB Positron](https://carto.com/basemaps) basemap.
+
+**Coordinate reference systems**: the bus routes layer is WGS84 (EPSG:4326)
+lat/lng. The states/territories layer is kept in its native **GDA2020**
+(EPSG:7844) — see below for why. The Leaflet map itself always renders on
+Web Mercator (EPSG:3857): every public raster basemap tile provider (CartoDB,
+OSM, ...) only serves tiles in that projection, so it's fixed regardless of
+what CRS the vector data is in. Leaflet projects incoming lat/lng values with
+spherical Web Mercator math without a datum-aware transform, so GDA2020 and
+WGS84 coordinates render side by side with no visible seam — the two datums
+differ by only ~1.5-2m in real-world position.
 
 ## Requirements
 
@@ -63,19 +71,18 @@ light gray context layer beneath the bus routes — is generated from the ABS
 python3 scripts/convert_states_shapefile.py
 ```
 
-This reprojects the shapefile from its native GDA2020 (EPSG:7844) to WGS84
-(EPSG:4326) to match the rest of the site, and simplifies the coastlines
+This keeps the shapefile's native **GDA2020 (EPSG:7844)** coordinates rather
+than reprojecting to WGS84 — the output's `crs` member declares
+`urn:ogc:def:crs:EPSG::7844` accordingly. It also simplifies the coastlines
 (`SIMPLIFY_TOLERANCE_DEG` in the script, default ~200m) — the raw shapefile
 has ~1.8M vertices across 10 states/territories at full cartographic detail
 (down to tiny offshore islands), far more than a background layer needs. On
-this dataset that's 29 MB → 3.6 MB. Note GDA2020 and WGS84 differ by roughly
-1.5–2m in real-world position due to different reference frames/epochs — well
-below anything visible at web-map scale, so no additional datum shift beyond
-the standard EPSG:7844→EPSG:4326 transform is applied.
+this dataset that's 29 MB → 3.6 MB.
 
 This layer is optional — if `data/states.geojson` isn't present, the site
 still loads and just shows the bus routes without it (a console warning is
-logged, nothing breaks).
+logged, nothing breaks). Popups are disabled on this layer; it's
+display/context only and isn't listed in the legend.
 
 ## Setup — using GTFS instead
 

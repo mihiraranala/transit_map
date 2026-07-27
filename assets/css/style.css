@@ -61,12 +61,3 @@ html, body, #map {
   height: 3px;
   width: 16px;
 }
-
-.legend-swatch-outline {
-  background: transparent;
-  border: 2px solid;
-}
-
-.legend-swatch-fill {
-  border: 1px solid #999;
-}
